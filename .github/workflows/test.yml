@@ -1,0 +1,42 @@
+name: Test project                                # name of the workflow
+
+on:                                               # trigger the workflow push request, only on master branch.
+  push: { branches: [master] }
+
+env:
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}     # unity license as secret
+
+jobs:
+  testAllModes:
+    name: Test in ${{ matrix.testMode }} on version ${{ matrix.unityVersion }}
+    runs-on: ubuntu-latest                        # runs on github hosted server
+    strategy:
+      fail-fast: false
+      matrix:
+        projectPath:
+          - IntegrationTest                       # name of unity project in repository
+        unityVersion:
+          - 2019.3.7f1                            # unity version you are using
+        testMode:
+          - playmode                              # playmode or editmode or both the tests
+    steps:
+      - uses: actions/checkout@v2                 # action needs a copy of the repository
+        with:
+          lfs: true
+      - uses: actions/cache@v1.1.0                # caching dependencies
+        with:
+          path: ${{ matrix.projectPath }}/Library
+          key: Library-${{ matrix.projectPath }}
+          restore-keys: 
+            Library-
+      - uses: webbertakken/unity-test-runner@v1.4  #webertakken username/owner, github repo name: unity-test-runner where action is defined
+        id: tests
+        with: 
+          projectPath: ${{ matrix.projectPath }}
+          unityVersion: ${{ matrix.unityVersion }}
+          testMode: ${{ matrix.testMode }}
+          artifactsPath: ${{ matrix.testMode }}-artifacts
+      - uses: actions/upload-artifact@v1
+        with:
+          name: Test results for ${{ matrix.testMode }}     # returns an xml file
+          path: ${{ steps.tests.outputs.artifactsPath }}    
