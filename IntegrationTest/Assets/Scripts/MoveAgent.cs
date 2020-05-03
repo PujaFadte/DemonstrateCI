@@ -9,7 +9,7 @@ public class MoveAgent : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //StartCoroutine("Move");
+        StartCoroutine("Move");
     }
 
     IEnumerator Move() {
